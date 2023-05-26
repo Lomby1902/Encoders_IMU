@@ -15,4 +15,3 @@ In the first use the command ```roscore```
 
 In the second the command ```rosrun rosserial_python serial_node.py /dev/ttyACM0``` (If ACM0 doesn't works means that the nucleo is connected to another port)
 
-In the third ```rostopic echo chatter```
