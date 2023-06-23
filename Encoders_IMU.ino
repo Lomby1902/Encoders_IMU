@@ -9,8 +9,8 @@
 #include <sensor_msgs/Imu.h>
 std_msgs::Float64MultiArray speed_msg;
 sensor_msgs::Imu imu_msg;
-ros::Publisher Wheels("/wheel_speed", &speed_msg);
-ros::Publisher Imu("Imu", &imu_msg);
+ros::Publisher Wheels("/autonomous_steer_bot/wheel_speed", &speed_msg);
+ros::Publisher Imu("/autonomous_steer_bot/imu/data", &imu_msg);
 ros::NodeHandle nh;
 
 #include <MovingAveragePlus.h>
