@@ -3,7 +3,7 @@
 //#include "stm32f4xx_hal.h"
 
 
-
+/*
 #include <ros.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <sensor_msgs/Imu.h>
@@ -12,7 +12,7 @@ sensor_msgs::Imu imu_msg;
 ros::Publisher Wheels("/autonomous_steer_bot/wheel_speed", &speed_msg);
 ros::Publisher Imu("/autonomous_steer_bot/imu/data", &imu_msg);
 ros::NodeHandle nh;
-
+*/
 #include <MovingAveragePlus.h>
 
 
@@ -36,6 +36,9 @@ int timerOverflow = 65535;    //16 bit registry
 
 const int fori = 20;
 double diameter = 79.0/1000.0; 
+float deltat=0;
+float angolo_prec=0;
+float deltaangolo=0;
 
 
 #include "motion_fx.h"
@@ -56,7 +59,7 @@ double diameter = 79.0/1000.0;
 
 #define GBIAS_ACC_TH_SC                 (2.0f*0.000765f)
 #define GBIAS_GYRO_TH_SC                (2.0f*0.002f)
-#define GBIAS_MAG_TH_SC                 (2.0f*0.001500f)
+
 
 #define DECIMATION                      1U
 
@@ -86,7 +89,6 @@ HardwareTimer *MyTim;
 
 volatile uint8_t fusion_flag;
 
-bool mag_calibrated = true;
 
 void fusion_update(void)
 {
@@ -172,9 +174,7 @@ void setup() {
   pinMode(PB1,INPUT);
   pinMode(PB2,INPUT);
   
-  float ans_float;
-  MFX_MagCal_input_t mag_data_in;
-  MFX_MagCal_output_t mag_data_out;
+ 
   
   while (!Serial) yield();
 
@@ -205,36 +205,29 @@ void setup() {
   ipKnobs->gyro_orientation[0] = 'n';
   ipKnobs->gyro_orientation[1] = 'w';
   ipKnobs->gyro_orientation[2] = 'u';
-  ipKnobs->mag_orientation[0] = 'n';
-  ipKnobs->mag_orientation[1] = 'e';
-  ipKnobs->mag_orientation[2] = 'u';
 
   ipKnobs->gbias_acc_th_sc = GBIAS_ACC_TH_SC;
   ipKnobs->gbias_gyro_th_sc = GBIAS_GYRO_TH_SC;
-  ipKnobs->gbias_mag_th_sc = GBIAS_MAG_TH_SC;
 
   ipKnobs->output_type = MFX_ENGINE_OUTPUT_ENU;
   ipKnobs->LMode = 1;
   ipKnobs->modx = DECIMATION;
 
   MotionFX_setKnobs(mfxstate, ipKnobs);
-  MotionFX_enable_6X(mfxstate, MFX_ENGINE_DISABLE);
-  MotionFX_enable_9X(mfxstate, MFX_ENGINE_ENABLE);
+  MotionFX_enable_6X(mfxstate, MFX_ENGINE_ENABLE);
+  MotionFX_enable_9X(mfxstate, MFX_ENGINE_DISABLE);
+
 
   /* OPTIONAL */
   /* Get library version */
-  LibVersionLen = (int)MotionFX_GetLibVersion(LibVersion);
+  LibVersionLen = (int)MotionFX_GetLibVersion(LibVersion);  
 
-  /* Enable magnetometer calibration */
-  MotionFX_MagCal_init(ALGO_PERIOD, 1);
-  
-
-
-  nh.initNode();
-  speed_msg.data_length = 4;
+ 
+/*nh.initNode();
+  speed_msg.data_length = 4; 
   nh.advertise(Wheels);
   nh.advertise(Imu);
-  
+  */
   MyTim = new HardwareTimer(TIM3);
   MyTim->setOverflow(ALGO_FREQ, HERTZ_FORMAT);
   MyTim->attachInterrupt(fusion_update);
@@ -249,7 +242,11 @@ void setup() {
   attachInterrupt(PB14,count2,RISING);
   attachInterrupt(PB1,count3,RISING);
   attachInterrupt(PB2,count4,RISING);
-        
+
+  AccGyr.Get_X_Axes(accelerometer);
+  AccGyr.Get_G_Axes(gyroscope);
+
+  angolo_prec=data_out.rotation[0];
 }
 
 
@@ -263,6 +260,7 @@ void loop() {
     if(fusion_flag)
     {
       fusion_flag = 0;
+      deltat=millis();
       AccGyr.Get_X_Axes(accelerometer);
       AccGyr.Get_G_Axes(gyroscope);
 
@@ -293,23 +291,23 @@ void loop() {
 
       
      
-      if(data_out.rotation[0]>180){
-        data_out.rotation[0]=mapfloat(data_out.rotation[0],180,360,-180,0);
-      }
       
 
       
     }
+       deltaangolo=abs(angolo_prec - data_out.rotation[0]);
+       angolo_prec=data_out.rotation[0];
+       deltat=millis()-deltat;
       //pubblica i dati sulla velocità
-      
+      /*
       speed_msg.data=speed_measurement;
       Wheels.publish( &speed_msg );  
 
       //imposta il messaggio con i dati dell'IMU
-      imu_msg.orientation.z=data_out.quaternion[0];
-      imu_msg.orientation.x=data_out.quaternion[1];
-      imu_msg.orientation.y=data_out.quaternion[2];
-      imu_msg.orientation.w=data_out.quaternion[3];
+      imu_msg.orientation.z=data_out.rotation[0];
+      imu_msg.orientation.x=data_out.rotation[1];
+      imu_msg.orientation.y=data_out.rotation[2];
+      imu_msg.orientation.w=0;
       imu_msg.linear_acceleration.x=data_out.linear_acceleration[0];
       imu_msg.linear_acceleration.y=data_out.linear_acceleration[1];
       imu_msg.linear_acceleration.z=data_out.linear_acceleration[2];
@@ -317,7 +315,31 @@ void loop() {
       Imu.publish(&imu_msg);
       
       nh.spinOnce();
-    
+*/
+      
+      Serial.print(speed_measurement[0]); //velocita
+      Serial.print(" , ");
+      Serial.print(speed_measurement[1]); //velocita
+      Serial.print(" , ");
+      Serial.print(speed_measurement[2]); //velocita
+      Serial.print(" , ");
+      Serial.print(speed_measurement[3]); //velocita
+      Serial.print(" , ");  
+      Serial.print(data_out.rotation[0]); //yaw
+      Serial.print(" , ");
+      Serial.print(data_out.rotation[1]); //pitch
+      Serial.print(" , ");
+      Serial.print(data_out.rotation[2]); //roll
+      Serial.print(" , ");
+      Serial.print(deltaangolo/(deltat/1000)); //angular speed
+      Serial.print(" , ");
+      Serial.print(deltaangolo);
+      Serial.print(" , ");
+      Serial.print(data_out.linear_acceleration[0]); //acc_x
+      Serial.print(" , ");
+      Serial.print(data_out.linear_acceleration[1]); //acc_y
+      Serial.print(" , ");
+      Serial.println(data_out.linear_acceleration[2]); //acc_z
   
  
 }
