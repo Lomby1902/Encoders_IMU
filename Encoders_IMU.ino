@@ -63,6 +63,8 @@ float deltaangolo=0;
 
 #define DECIMATION                      1U
 
+#define G_TO_ACCEL 9.81
+
 #if !(__CORTEX_M == 0U)
 static MFX_knobs_t iKnobs;
 static MFX_knobs_t *ipKnobs = &iKnobs;
@@ -246,6 +248,7 @@ void setup() {
   AccGyr.Get_X_Axes(accelerometer);
   AccGyr.Get_G_Axes(gyroscope);
 
+  //Valore di giroscopio iniziale
   angolo_prec=data_out.rotation[0];
 }
 
@@ -295,8 +298,11 @@ void loop() {
 
       
     }
-       deltaangolo=abs(angolo_prec - data_out.rotation[0]);
+       //Variazione di angolo in modulo e convertita in radianti
+       deltaangolo=(abs(angolo_prec - data_out.rotation[0]))*0.01745;
+       //l'angolo precedente diventa quello appena letto
        angolo_prec=data_out.rotation[0];
+       //variazione di tempo
        deltat=millis()-deltat;
       //pubblica i dati sulla velocità
       /*
@@ -317,13 +323,13 @@ void loop() {
       nh.spinOnce();
 */
       
-      Serial.print(speed_measurement[0]); //velocita
+      Serial.print(speed_measurement[0]); //motor_speed
       Serial.print(" , ");
-      Serial.print(speed_measurement[1]); //velocita
+      Serial.print(speed_measurement[1]); //motor_speed
       Serial.print(" , ");
-      Serial.print(speed_measurement[2]); //velocita
+      Serial.print(speed_measurement[2]); //motor_speed
       Serial.print(" , ");
-      Serial.print(speed_measurement[3]); //velocita
+      Serial.print(speed_measurement[3]); //motor_speed
       Serial.print(" , ");  
       Serial.print(data_out.rotation[0]); //yaw
       Serial.print(" , ");
@@ -333,13 +339,13 @@ void loop() {
       Serial.print(" , ");
       Serial.print(deltaangolo/(deltat/1000)); //angular speed
       Serial.print(" , ");
-      Serial.print(deltaangolo);
+      Serial.print(deltaangolo); //angular variation
       Serial.print(" , ");
-      Serial.print(data_out.linear_acceleration[0]); //acc_x
+      Serial.print(data_out.linear_acceleration[0] * G_TO_ACCEL); //acc_x
       Serial.print(" , ");
-      Serial.print(data_out.linear_acceleration[1]); //acc_y
+      Serial.print(data_out.linear_acceleration[1] * G_TO_ACCEL); //acc_y
       Serial.print(" , ");
-      Serial.println(data_out.linear_acceleration[2]); //acc_z
+      Serial.println(data_out.linear_acceleration[2] * G_TO_ACCEL); //acc_z
   
  
 }
