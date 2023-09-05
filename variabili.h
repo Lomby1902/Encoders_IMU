@@ -24,6 +24,9 @@ double diameter = 79.0/1000.0;
 float deltat=0;
 float angolo_prec=0;
 float deltaangolo=0;
+float offset_x=0;
+float offset_y=0;
+float offset_z=0;
 
 
 #include "motion_fx.h"

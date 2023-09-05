@@ -167,6 +167,9 @@ void setup() {
 
   //Valore di giroscopio iniziale
   angolo_prec=data_out.rotation[0];
+  offset_x=data_out.rotation[0];
+  offset_y=data_out.rotation[1];
+  offset_z=data_out.rotation[2];
 }
 
 
@@ -215,6 +218,13 @@ void loop() {
 
       
     }
+    /*
+       data_out.rotation[0]= data_out.rotation[0]-offset_x;
+       data_out.rotation[1]= data_out.rotation[1]-offset_y;
+       data_out.rotation[2]= data_out.rotation[2]-offset_z;
+  */
+    
+        
        //Variazione di angolo in modulo e convertita in radianti
        deltaangolo=(abs(angolo_prec - data_out.rotation[0]))* DEG_TO_RAD;
        //l'angolo precedente diventa quello appena letto
@@ -248,11 +258,11 @@ void loop() {
       Serial.print(" , ");
       Serial.print(speed_measurement[3]); //motor_speed (m/s)
       Serial.print(" , ");  
-      Serial.print(data_out.rotation[0]*DEG_TO_RAD); //yaw (rad)
+      Serial.print(data_out.rotation[0] * DEG_TO_RAD); //yaw (rad)
       Serial.print(" , ");
-      Serial.print(data_out.rotation[1]*DEG_TO_RAD); //pitch (rad)
+      Serial.print(data_out.rotation[1] *DEG_TO_RAD); //pitch (rad)
       Serial.print(" , ");
-      Serial.print(data_out.rotation[2]*DEG_TO_RAD); //roll (rad)
+      Serial.print(data_out.rotation[2] *DEG_TO_RAD); //roll (rad)
       Serial.print(" , ");
       Serial.print(deltaangolo/(deltat/1000)); //angular speed (rad/s)
       Serial.print(" , ");
